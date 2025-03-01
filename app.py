@@ -6,20 +6,30 @@ from sqlalchemy.orm import DeclarativeBase
 from collections import defaultdict
 import csv
 from io import StringIO
+from models import db, Task, Category
 
-class Base(DeclarativeBase):
-    pass
-
-db = SQLAlchemy(model_class=Base)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 
-# Use the DATABASE_URL provided by Replit
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+# Database configuration
+if os.environ.get("DATABASE_URL"):
+    # For Replit PostgreSQL database
+    db_url = os.environ.get("DATABASE_URL")
+    # Ensure URL works with SQLAlchemy 
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+else:
+    # For local PostgreSQL database
+    app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:Ss%40071424@localhost:5432/task_manager"
+
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Initialize db with the Flask app
 db.init_app(app)
 
 @app.route('/')
@@ -153,7 +163,7 @@ def export_tasks():
     buffer = BytesIO()
     buffer.write(output.encode('utf-8'))
     buffer.seek(0)
-    
+
     return send_file(
         buffer,
         mimetype='text/csv',
@@ -162,7 +172,6 @@ def export_tasks():
     )
 
 with app.app_context():
-    from models import Task, Category
     db.create_all()
 
     # Create default categories if they don't exist
