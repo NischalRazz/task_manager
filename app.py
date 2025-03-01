@@ -1,9 +1,11 @@
 import os
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, jsonify, flash, redirect, url_for
+from flask import Flask, render_template, request, jsonify, flash, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from collections import defaultdict
+import csv
+from io import StringIO
 
 class Base(DeclarativeBase):
     pass
@@ -117,6 +119,42 @@ def get_analytics():
         'trend_dates': dates,
         'trend_completed': completed_trend
     })
+
+@app.route('/export/tasks')
+def export_tasks():
+    # Get all tasks with their categories
+    tasks = Task.query.all()
+
+    # Create a string buffer for CSV data
+    si = StringIO()
+    writer = csv.writer(si)
+
+    # Write headers
+    writer.writerow(['Title', 'Description', 'Status', 'Priority', 'Category', 'Due Date', 'Created At'])
+
+    # Write task data
+    for task in tasks:
+        writer.writerow([
+            task.title,
+            task.description,
+            task.status,
+            task.priority,
+            task.category.name if task.category else 'No Category',
+            task.due_date.strftime('%Y-%m-%d') if task.due_date else '',
+            task.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+
+    # Prepare the response
+    output = si.getvalue()
+    si.close()
+
+    # Create the response with CSV data
+    return send_file(
+        StringIO(output),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=f'tasks_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+    )
 
 with app.app_context():
     from models import Task, Category

@@ -196,6 +196,20 @@ document.addEventListener('DOMContentLoaded', function() {
             card.querySelector('.display-4').textContent = value;
         });
     }
+
+    // Export tasks functionality
+    const exportButton = document.getElementById('exportTasks');
+    if (exportButton) {
+        exportButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                window.location.href = '/export/tasks';
+                showToast('Downloading tasks export...', 'success');
+            } catch (error) {
+                showToast('Error exporting tasks', 'danger');
+            }
+        });
+    }
 });
 
 function showToast(message, type) {
