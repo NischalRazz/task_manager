@@ -148,9 +148,14 @@ def export_tasks():
     output = si.getvalue()
     si.close()
 
-    # Create the response with CSV data
+    # Create the response with CSV data - use BytesIO for binary mode
+    from io import BytesIO
+    buffer = BytesIO()
+    buffer.write(output.encode('utf-8'))
+    buffer.seek(0)
+    
     return send_file(
-        StringIO(output),
+        buffer,
         mimetype='text/csv',
         as_attachment=True,
         download_name=f'tasks_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'

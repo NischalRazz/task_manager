@@ -77,22 +77,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Bulk actions
     const bulkActions = document.getElementById('bulkActions');
-    const selectedCount = bulkActions.querySelector('.selected-count');
-    let selectedTasks = new Set();
-
-    document.querySelectorAll('.task-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            const taskId = e.target.dataset.taskId;
-            if (e.target.checked) {
-                selectedTasks.add(taskId);
-            } else {
-                selectedTasks.delete(taskId);
-            }
-            updateBulkActionsVisibility();
+    let selectedCount, selectedTasks = new Set();
+    
+    if (bulkActions) {
+        selectedCount = bulkActions.querySelector('.selected-count');
+        
+        document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const taskId = e.target.dataset.taskId;
+                if (e.target.checked) {
+                    selectedTasks.add(taskId);
+                } else {
+                    selectedTasks.delete(taskId);
+                }
+                updateBulkActionsVisibility();
+            });
         });
-    });
-
-    document.querySelector('.bulk-delete').addEventListener('click', async () => {
+        
+        const bulkDeleteButton = document.querySelector('.bulk-delete');
+        if (bulkDeleteButton) {
+            bulkDeleteButton.addEventListener('click', async () => {
         if (confirm('Are you sure you want to delete the selected tasks?')) {
             for (const taskId of selectedTasks) {
                 try {
@@ -112,6 +116,22 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('Selected tasks deleted successfully', 'success');
         }
     });
+        }
+    }
+    
+    // Add the updateBulkActionsVisibility function if it doesn't exist
+    if (typeof updateBulkActionsVisibility !== 'function') {
+        function updateBulkActionsVisibility() {
+            if (!bulkActions || !selectedCount) return;
+            
+            selectedCount.textContent = `${selectedTasks.size} tasks selected`;
+            if (selectedTasks.size > 0) {
+                bulkActions.classList.add('show');
+            } else {
+                bulkActions.classList.remove('show');
+            }
+        }
+    }
 
     document.querySelector('.bulk-complete').addEventListener('click', async () => {
         for (const taskId of selectedTasks) {
@@ -192,8 +212,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update statistics cards
         document.querySelectorAll('.stats-card').forEach((card, index) => {
-            const value = Object.values(stats)[index];
-            card.querySelector('.display-4').textContent = value;
+            if (card && card.querySelector('.display-4')) {
+                const value = Object.values(stats)[index];
+                card.querySelector('.display-4').textContent = value;
+            }
         });
     }
 
