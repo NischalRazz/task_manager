@@ -1,25 +1,31 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Theme toggling
     const themeToggle = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+
+    function setTheme(theme) {
+        htmlElement.setAttribute('data-bs-theme', theme);
+        localStorage.setItem('theme', theme);
+        const icon = document.querySelector('#themeToggle i');
+        icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
+    }
+
     themeToggle.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+        const currentTheme = htmlElement.getAttribute('data-bs-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-bs-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcon(newTheme);
+        setTheme(newTheme);
     });
 
-    // Initialize theme
+    // Initialize theme from localStorage or default to dark
     const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-bs-theme', savedTheme);
-    updateThemeIcon(savedTheme);
+    setTheme(savedTheme);
 
     // Task status toggle
     document.querySelectorAll('.task-status-toggle').forEach(checkbox => {
         checkbox.addEventListener('change', async (e) => {
             const taskId = e.target.dataset.taskId;
             const status = e.target.checked ? 'completed' : 'pending';
-            
+
             try {
                 const response = await fetch(`/task/${taskId}`, {
                     method: 'PUT',
@@ -28,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify({ status }),
                 });
-                
+
                 if (response.ok) {
                     const taskCard = document.querySelector(`#task-${taskId}`);
                     taskCard.classList.toggle('task-complete', e.target.checked);
@@ -43,15 +49,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Search functionality
     const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        document.querySelectorAll('.task-card').forEach(card => {
-            const title = card.querySelector('.task-title').textContent.toLowerCase();
-            const description = card.querySelector('.task-description').textContent.toLowerCase();
-            const isVisible = title.includes(searchTerm) || description.includes(searchTerm);
-            card.style.display = isVisible ? 'block' : 'none';
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            document.querySelectorAll('.task-card').forEach(card => {
+                const title = card.querySelector('.task-title').textContent.toLowerCase();
+                const description = card.querySelector('.task-description').textContent.toLowerCase();
+                const isVisible = title.includes(searchTerm) || description.includes(searchTerm);
+                card.style.display = isVisible ? 'block' : 'none';
+            });
         });
-    });
+    }
 
     // Filter by category
     document.querySelectorAll('.category-filter').forEach(filter => {
@@ -67,11 +75,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
-function updateThemeIcon(theme) {
-    const icon = document.querySelector('#themeToggle i');
-    icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
-}
 
 function showToast(message, type) {
     const toastContainer = document.querySelector('.toast-container');
