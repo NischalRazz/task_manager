@@ -1,8 +1,9 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, flash, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from collections import defaultdict
 
 class Base(DeclarativeBase):
     pass
@@ -67,6 +68,55 @@ def delete_task(task_id):
     db.session.delete(task)
     db.session.commit()
     return jsonify({'message': 'Task deleted successfully'})
+
+@app.route('/analytics')
+def analytics():
+    return render_template('analytics.html')
+
+@app.route('/api/analytics')
+def get_analytics():
+    # Get all tasks
+    tasks = Task.query.all()
+
+    # Status distribution
+    completed_count = sum(1 for task in tasks if task.status == 'completed')
+    pending_count = len(tasks) - completed_count
+
+    # Priority distribution
+    priority_counts = {
+        'High': sum(1 for task in tasks if task.priority == 'High'),
+        'Medium': sum(1 for task in tasks if task.priority == 'Medium'),
+        'Low': sum(1 for task in tasks if task.priority == 'Low')
+    }
+
+    # Category distribution
+    category_distribution = defaultdict(int)
+    for task in tasks:
+        if task.category:
+            category_distribution[task.category.name] += 1
+
+    # Task completion trend (last 7 days)
+    today = datetime.utcnow().date()
+    dates = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(6, -1, -1)]
+    completed_trend = []
+
+    for date_str in dates:
+        date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        completed_count_day = sum(1 for task in tasks 
+                            if task.status == 'completed' 
+                            and task.created_at.date() == date)
+        completed_trend.append(completed_count_day)
+
+    return jsonify({
+        'completed_count': completed_count,
+        'pending_count': pending_count,
+        'priority_high': priority_counts['High'],
+        'priority_medium': priority_counts['Medium'],
+        'priority_low': priority_counts['Low'],
+        'category_distribution': dict(category_distribution),
+        'trend_dates': dates,
+        'trend_completed': completed_trend
+    })
 
 with app.app_context():
     from models import Task, Category
