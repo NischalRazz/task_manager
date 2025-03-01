@@ -26,6 +26,19 @@
 .task-complete {
     opacity: 0.7;
     text-decoration: line-through;
+    animation: completeTask 0.5s ease-in-out;
+}
+
+@keyframes completeTask {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .floating-add-button {
@@ -71,4 +84,82 @@
 
 [data-bs-theme="dark"] .theme-toggle:hover {
     background-color: var(--bs-gray-800);
+}
+
+/* Category colors */
+.category-tag {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    transition: all var(--transition-speed);
+}
+
+.category-Work {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+.category-Personal {
+    background-color: var(--bs-info);
+    color: white;
+}
+
+.category-Shopping {
+    background-color: var(--bs-warning);
+    color: black;
+}
+
+.category-Health {
+    background-color: var(--bs-success);
+    color: white;
+}
+
+/* Task Statistics */
+.stats-card {
+    transition: transform var(--transition-speed);
+    cursor: pointer;
+}
+
+.stats-card:hover {
+    transform: translateY(-3px);
+}
+
+.task-list {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 1rem;
+}
+
+/* Bulk Selection */
+.task-checkbox {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.bulk-actions {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1040;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    display: none;
+}
+
+.bulk-actions.show {
+    display: block;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
 }
